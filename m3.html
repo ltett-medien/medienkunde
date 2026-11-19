@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="de">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat-Retter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Spielwelt in den Farben der Schule: Dunkelblau als Raum, weiße Karten, farbige Antwortknöpfe */
+  --navy: #123661;
+  --navy-2: #1d4a7e;
+  --blue: #009ee3;
+  --green: #5f9e10;
+  --green-bright: #94c11a;
+  --yellow: #f2b200;
+  --orange: #f39100;
+  --red: #d64541;
+  --card: #ffffff;
+  --ink: #123661;
+  --muted: #5d7190;
+  --font: 'Calibri', 'Carlito', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--navy); color: #fff; font-family: var(--font); font-size: 18px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; cursor: pointer; border: 0; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.app { min-height: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 16px 28px; gap: 18px; }
+.top { width: 100%; max-width: 760px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tag { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--green-bright); }
+.pill { background: var(--navy-2); border-radius: 999px; padding: 6px 14px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.screen { width: 100%; max-width: 760px; display: flex; flex-direction: column; gap: 18px; }
+h1 { font-size: 40px; line-height: 1.05; margin: 4px 0 0; text-wrap: balance; }
+h2 { font-size: 26px; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.lead { font-size: 20px; color: #d6e2f0; max-width: 60ch; }
+.panel { background: var(--card); color: var(--ink); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.rounds { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.round { background: #eef2f7; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.round b { font-size: 17px; }
+.round span { font-size: 15px; color: var(--muted); }
+label { font-weight: 700; font-size: 16px; }
+input[type=text] { width: 100%; font: inherit; font-size: 20px; padding: 12px 14px; border-radius: 12px; border: 2px solid #bdc7d3; color: var(--ink); background: #fff; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn { border-radius: 14px; padding: 16px 22px; font-size: 20px; font-weight: 700; flex: 1 1 200px; min-height: 60px; }
+.btn.primary { background: var(--blue); color: #fff; }
+.btn.exam { background: var(--orange); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid #bdc7d3; }
+.btn.light { background: #fff; color: var(--navy); flex: 0 0 auto; }
+.screen > .btn, .screen > .row { flex: 0 0 auto; }
+.hint { font-size: 15px; color: var(--muted); }
+.err { color: var(--red); font-weight: 700; font-size: 16px; min-height: 1.2em; }
+.progress { height: 10px; background: var(--navy-2); border-radius: 999px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--green-bright); transition: width .3s; }
+.card { background: var(--card); color: var(--ink); border-radius: 22px; padding: 24px; min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.card .q { font-size: 15px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.card .item { font-size: 28px; font-weight: 700; line-height: 1.2; text-wrap: balance; }
+.card .sub { font-size: 18px; color: var(--muted); }
+.answers { display: grid; gap: 12px; grid-template-columns: repeat(var(--cols, 2), 1fr); }
+.ans { border-radius: 18px; min-height: 84px; padding: 12px 14px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 20px; font-weight: 700; text-align: center; transition: transform .1s; background: var(--blue); }
+.ans small { font-size: 14px; font-weight: 400; opacity: .95; }
+.ans:active { transform: scale(.97); }
+.ans.c-green { background: var(--green); } .ans.c-yellow { background: var(--yellow); color: #3a2a00; } .ans.c-red { background: var(--red); }
+.ans.c-orange { background: var(--orange); } .ans.c-navy { background: var(--navy-2); border: 2px solid #4f74a6; } .ans.c-blue { background: var(--blue); }
+.ans.mc { background: #fff; color: var(--ink); font-size: 19px; font-weight: 700; justify-content: flex-start; flex-direction: row; text-align: left; gap: 12px; min-height: 70px; }
+.ans.mc .key { flex: 0 0 34px; height: 34px; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-size: 16px; }
+.ans[disabled] { opacity: .45; }
+.ans.picked { opacity: 1; outline: 4px solid var(--orange); }
+.ans.right { opacity: 1; outline: 4px solid var(--green-bright); }
+.feedback { border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; font-size: 18px; }
+.feedback.ok { background: #e5f4d0; color: #24440a; }
+.feedback.bad { background: #fbe1e0; color: #6e1714; }
+.feedback b { font-size: 20px; }
+.timer { height: 6px; background: var(--navy-2); border-radius: 999px; overflow: hidden; }
+.timer i { display: block; height: 100%; background: var(--orange); width: 100%; }
+.big { font-size: 64px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.stars { font-size: 40px; letter-spacing: 6px; color: var(--yellow); }
+.code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 20px; background: #eef2f7; color: var(--ink); border: 2px dashed var(--blue); border-radius: 12px; padding: 14px; word-break: break-word; user-select: all; -webkit-user-select: all; }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.legend div { border-radius: 12px; padding: 10px 12px; font-size: 15px; color: #fff; background: var(--navy-2); }
+/* Chat */
+.chat { width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 18px; background: #eef2f7; color: var(--ink); }
+.msg .who { display: block; font-size: 13px; font-weight: 700; color: var(--muted); }
+.msg.me { align-self: flex-end; background: var(--blue); color: #fff; }
+.msg.me .who { color: #dff3fc; }
+/* Reihenfolge */
+.slots { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 54px; padding: 8px; border: 2px dashed #bdc7d3; border-radius: 14px; }
+.slot { background: var(--navy); color: #fff; border-radius: 10px; padding: 10px 14px; font-size: 17px; font-weight: 700; }
+.slots.empty::before { content: 'Tippe die Teile unten in der richtigen Reihenfolge an'; color: var(--muted); font-size: 15px; align-self: center; }
+.tiles { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.tile { background: #fff; color: var(--ink); border-radius: 12px; padding: 14px 16px; font-size: 18px; font-weight: 700; min-height: 54px; }
+.tile[disabled] { opacity: .3; }
+/* Fehler finden */
+.mock { width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.part { width: 100%; text-align: left; background: #f6f8fb; border: 2px solid #dbe3ee; border-radius: 12px; padding: 12px 14px; color: var(--ink); font-size: 17px; }
+.part:hover { border-color: var(--blue); }
+.part[disabled] { cursor: default; }
+.part.picked { border-color: var(--orange); border-width: 3px; }
+.part.right { border-color: var(--green); border-width: 3px; background: #eef7e2; }
+.part .t1 { font-size: 24px; font-weight: 700; }
+.part .ad { font-size: 13px; font-weight: 700; color: #6d4c00; }
+.part .url { font-size: 13px; color: #2e7d4f; }
+.part .lnk { font-size: 18px; font-weight: 700; color: #1a4fa0; }
+/* Quizshow */
+.ladder { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.ladder span { min-width: 30px; text-align: center; padding: 4px 6px; border-radius: 8px; background: var(--navy-2); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ladder span.done { background: var(--green); } .ladder span.miss { background: var(--red); } .ladder span.now { background: var(--orange); }
+.jokers { display: flex; gap: 10px; justify-content: center; }
+.joker { background: #fff; color: var(--navy); border-radius: 999px; padding: 10px 18px; font-size: 16px; font-weight: 700; }
+.joker[disabled] { opacity: .35; }
+.tipbox { background: #fff6e0; color: #5a3d00; border-radius: 12px; padding: 10px 14px; font-size: 17px; }
+[hidden] { display: none !important; }
+@media (max-width: 560px) {
+  h1 { font-size: 32px; }
+  .answers { grid-template-columns: 1fr !important; }
+  .ans { min-height: 64px; }
+  .card .item { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <span class="tag" id="tag"></span>
+    <span class="pill" id="scorePill" hidden>0 Punkte</span>
+  </div>
+
+  <section class="screen" id="sStart">
+    <h1 id="gTitle"></h1>
+    <p class="lead" id="gLead"></p>
+    <div class="panel">
+      <div class="rounds" id="roundList"></div>
+      <div>
+        <label for="name">Dein Vorname und deine Klasse</label>
+        <input type="text" id="name" placeholder="z. B. Lena 7G2" autocomplete="off" maxlength="30">
+      </div>
+      <p class="err" id="startErr"></p>
+      <div class="row">
+        <button class="btn primary" id="btnPractice">Üben</button>
+        <button class="btn exam" id="btnExam">Prüfung starten</button>
+      </div>
+      <p class="hint">Üben: so oft du willst, mit Erklärungen. Prüfung: nur mit dem Code deiner Lehrkraft, nur einmal, zählt für die Note.</p>
+    </div>
+  </section>
+
+  <section class="screen" id="sUnlock" hidden>
+    <h2>Prüfung freischalten</h2>
+    <div class="panel">
+      <label for="unlock">Code von der Tafel</label>
+      <input type="text" id="unlock" placeholder="4 Zeichen" autocomplete="off" maxlength="4" style="text-transform:uppercase;letter-spacing:.3em">
+      <p class="err" id="unlockErr"></p>
+      <div class="row">
+        <button class="btn ghost" id="btnBack">Zurück</button>
+        <button class="btn exam" id="btnUnlock">Los geht’s</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="sPlay" hidden>
+    <div class="progress"><i id="prog"></i></div>
+    <div class="ladder" id="ladder" hidden></div>
+    <div class="legend" id="legend" hidden></div>
+    <div class="card" id="card">
+      <div class="q" id="qLabel"></div>
+      <div id="qBody" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:12px"></div>
+      <div class="sub" id="qSub"></div>
+    </div>
+    <div class="jokers" id="jokers" hidden>
+      <button class="joker" id="j5050">50 : 50</button>
+      <button class="joker" id="jTip">Tipp</button>
+    </div>
+    <div class="tipbox" id="tipbox" hidden></div>
+    <div class="timer" id="timerWrap" hidden><i id="timer"></i></div>
+    <div class="answers" id="answers"></div>
+    <button class="btn light" id="btnCheck" hidden>Prüfen</button>
+    <div class="feedback" id="fb" hidden></div>
+    <button class="btn light" id="btnNext" hidden>Weiter</button>
+  </section>
+
+  <section class="screen" id="sEnd" hidden>
+    <h2 id="endTitle">Geschafft!</h2>
+    <div class="panel" style="align-items:center;text-align:center">
+      <div class="big" id="endScore">0/20</div>
+      <div class="stars" id="endStars"></div>
+      <p id="endMsg"></p>
+    </div>
+    <div class="panel" id="examBox" hidden>
+      <h2>Ergebnis abgeben</h2>
+      <p>Das ist dein Ergebnis-Code:</p>
+      <div class="code" id="resCode"></div>
+      <div class="row"><button class="btn primary" id="btnCopy">Code kopieren</button></div>
+      <p class="hint" id="copyMsg"></p>
+      <ol class="steps">
+        <li>Tippe auf <b>Code kopieren</b>.</li>
+        <li>Öffne in Teams das Formular <b>Medienkunde – Ergebnisse</b>.</li>
+        <li>Füge den Code ein und tippe auf <b>Absenden</b>.</li>
+      </ol>
+      <p class="hint">Ändere den Code nicht. Sonst ist er ungültig.</p>
+    </div>
+    <div class="row" id="endButtons">
+      <button class="btn primary" id="btnAgain">Nochmal üben</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* Medienkunde 7e – gemeinsamer Spielkern (Codes, Mischen, Speicher) */
+const MK = (() => {
+  const SALT = 'MK7-Medienkunde-2026';
+  const ALPH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function fnv(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h >>> 0;
+  }
+  function enc(n, len) {
+    let s = '';
+    for (let i = 0; i < len; i++) { s += ALPH[n % 32]; n = Math.floor(n / 32); }
+    return s;
+  }
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dateDE = iso => iso.split('-').reverse().join('.');
+  // Freischaltcode: pro Spiel und Tag
+  const unlockCode = (game, iso) => enc(fnv(SALT + '|open|' + game + '|' + iso), 4);
+  // Prüfcode für das Ergebnis
+  const check = (game, name, pts, max, iso) => enc(fnv(SALT + '|res|' + game + '|' + name.trim().toLowerCase() + '|' + pts + '|' + max + '|' + iso), 5);
+  const resultCode = (game, name, pts, max) => {
+    const iso = today();
+    return `${game} · ${pts}/${max} · ${dateDE(iso)} · ${name.trim()} · ${check(game, name, pts, max, iso)}`;
+  };
+  const parse = line => {
+    const m = line.match(/(M[1-7]|FIN)\s*·\s*(\d+)\/(\d+)\s*·\s*(\d{2})\.(\d{2})\.(\d{4})\s*·\s*(.+?)\s*·\s*([A-Z2-9]{5})/);
+    if (!m) return null;
+    const iso = `${m[6]}-${m[5]}-${m[4]}`;
+    const ok = check(m[1], m[7], +m[2], +m[3], iso) === m[8];
+    return { game: m[1], pts: +m[2], max: +m[3], date: dateDE(iso), name: m[7], ok };
+  };
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* egal */ } },
+  };
+  return { unlockCode, resultCode, parse, shuffle, store, today, dateDE };
+})();
+
+</script>
+<script>
+window.GAMECFG = {
+  id: 'M3', tag: 'Medienkunde 7e · Modul 3', title: 'Chat-Retter',
+  lead: 'Im Klassenchat ist was los. Erkennst du, was okay ist, was Mobbing ist und wie du helfen kannst?',
+  praise: 'Super! Mit dir ist der Klassenchat ein guter Ort.',
+  rounds: [
+    { label: 'Okay oder nicht?', desc: 'Nachrichten bewerten. 7 Karten', kind: 'buttons', n: 7, time: 15, q: 'Ist diese Nachricht okay?',
+      options: [{ v: 'ok', label: 'Okay', color: 'green' }, { v: 'grenz', label: 'Grenzwertig', color: 'yellow' }, { v: 'nein', label: 'Nicht okay', color: 'red' }],
+      cards: [
+        { t: '„Kann mir jemand die Mathe-Hausaufgabe erklären?“', a: 'ok', why: 'Eine freundliche Frage. Genau dafür ist der Chat da.' },
+        { t: '„Dein Referat war gut, nur ein bisschen schnell.“', a: 'ok', why: 'Ehrlich und freundlich. So geht gutes Feedback.' },
+        { t: '„WER HAT MEIN HEFT???“', a: 'grenz', why: 'Großbuchstaben wirken wie Schreien. Frag lieber ruhig.' },
+        { t: '„Haha, schaut euch Toms Frisur an 😂“ + Foto', a: 'nein', why: 'Das stellt Tom bloß. Fotos von anderen nur mit Erlaubnis.' },
+        { t: '„Hier ist Saras Handynummer, schreibt ihr mal.“', a: 'nein', why: 'Fremde Daten gibst du nie ohne Erlaubnis weiter.' },
+        { t: '„Wer mit Mia redet, fliegt aus der Gruppe.“', a: 'nein', why: 'Das ist Ausgrenzen. Das tut weh und ist Mobbing.' },
+        { t: '„Sorry, ich war gestern gemein. Ist wieder gut?“', a: 'ok', why: 'Sich entschuldigen ist stark.' },
+        { t: '„Du checkst eh nix 🙄“', a: 'grenz', why: 'Das ist unfreundlich. Sag lieber, was dich stört.' },
+        { t: '„Gute Besserung! Ich schick dir die Hausaufgaben.“', a: 'ok', why: 'Hilfsbereit und nett.' },
+      ] },
+    { label: 'Spaß, Streit, Mobbing', desc: 'Was ist das? 7 Fälle', kind: 'buttons', n: 7, time: 20, q: 'Was ist das?',
+      legend: [['Spaß', 'alle lachen mit'], ['Streit', 'einmal, beide können sich wehren'], ['Mobbing', 'absichtlich, immer wieder, einer gegen viele']],
+      options: [{ v: 'spass', label: 'Spaß', color: 'green' }, { v: 'streit', label: 'Streit', color: 'yellow' }, { v: 'mobbing', label: 'Mobbing', color: 'red' }],
+      cards: [
+        { t: 'Ben und Luca streiten sich einmal über ein Fußballspiel. Am nächsten Tag ist alles gut.', a: 'streit', why: 'Einmal, beide auf Augenhöhe. Das ist ein Streit.' },
+        { t: 'Seit drei Wochen schreiben mehrere Kinder unter jedes Foto von Ana „hässlich“.', a: 'mobbing', why: 'Immer wieder, viele gegen eine. Das ist Mobbing.' },
+        { t: 'Jemand macht ein Fake-Profil mit Noahs Namen und postet peinliche Sachen.', a: 'mobbing', why: 'Absichtlich, öffentlich und Noah kann sich kaum wehren.' },
+        { t: 'Emma schickt ihrer Freundin ein lustiges Selfie. Beide lachen.', a: 'spass', why: 'Beide finden es lustig. Das ist Spaß.' },
+        { t: 'Die Klasse macht eine neue Gruppe – alle außer Jonas. Dort wird über ihn gelästert.', a: 'mobbing', why: 'Ausgrenzen und Lästern hinter dem Rücken ist Mobbing.' },
+        { t: 'Ein Foto von Lea beim Sport wird ohne ihre Erlaubnis an die ganze Stufe geschickt.', a: 'mobbing', why: 'Ohne Erlaubnis und vor vielen. Lea wird bloßgestellt.' },
+        { t: 'Zwei Freunde ärgern sich gegenseitig mit Sprüchen über ihren Lieblingsclub. Beide grinsen.', a: 'spass', why: 'Beide machen gerne mit. Hört einer auf zu lachen, ist Schluss.' },
+        { t: 'Mia und Sofie sind wegen einer Gruppenarbeit sauer aufeinander und schreiben sich böse Nachrichten.', a: 'streit', why: 'Ein Streit. Besser: reden statt schreiben.' },
+      ] },
+    { label: 'Was tun?', desc: 'Helfen und richtig handeln. 6 Aufgaben', kind: 'mc', n: 5, time: 25, q: 'Was ist die beste Reaktion?', cards: [
+      { t: 'Du bekommst seit Tagen gemeine Nachrichten.', chat: [['Unbekannt', 'Du bist so peinlich'], ['Unbekannt', 'Keiner mag dich']], o: ['Screenshot machen und einem Erwachsenen zeigen', 'Genauso gemein zurückschreiben', 'Alles löschen und nichts sagen'], a: 0, why: 'Beweise sichern und Hilfe holen. Löschen nimmt dir die Beweise.' },
+      { t: 'In der Klassengruppe wird über Jonas gelästert. Was kannst du als Zuschauer tun?', o: ['Jonas privat schreiben und Hilfe holen', 'Mitlachen, damit du dazugehörst', 'Nichts, geht dich nichts an'], a: 0, why: 'Wer nur zuschaut, hilft dem Täter. Du kannst einen Unterschied machen.' },
+      { t: 'Wo bekommst du in Luxemburg kostenlos Hilfe?', o: ['BEE SECURE Helpline 8002 1234', 'Bei einem Influencer', 'In einem Online-Spiel'], a: 0, why: 'Die BEE SECURE Helpline ist kostenlos und anonym. Auch das KannerJugendTelefon 116 111 hilft.' },
+      { t: 'Wem in der Schule kannst du dich anvertrauen?', o: ['Klassenlehrer oder SePAS', 'Niemandem', 'Nur dem Täter'], a: 0, why: 'Klassenlehrer und SePAS sind für dich da.' },
+      { t: 'Was kommt zuerst, wenn dich jemand online mobbt?', o: ['Nicht zurückschreiben', 'Das Handy wegwerfen', 'Allen davon erzählen'], a: 0, why: 'Reihenfolge: nicht antworten → Screenshot → blockieren und melden → Erwachsenen sagen.' },
+      { t: 'Was machst du, nachdem du einen Screenshot gemacht hast?', o: ['Blockieren und melden', 'Den Screenshot online posten', 'Nichts weiter'], a: 0, why: 'Blockieren schützt dich, Melden hilft der Plattform.' },
+    ] },
+    { label: 'Hilfekette', desc: 'Schritte ordnen. 1 Aufgabe', kind: 'order', n: 1, time: 40, q: 'Tippe die Schritte in der richtigen Reihenfolge an.', cards: [
+      { t: 'Was tust du bei Cybermobbing?', items: ['Nicht antworten', 'Screenshot', 'Blockieren und melden', 'Erwachsenen sagen'], why: 'Erst nicht antworten, dann Beweise sichern, dann blockieren und melden, dann Hilfe holen.' },
+    ] },
+  ],
+};
+
+</script>
+<script>
+/* Spielmotor. Kartentypen:
+   buttons: {t, a, why}            Antwort aus festen Knöpfen der Runde (round.options)
+   mc:      {t, o:[...], a:idx, why, chat?, tip?}   Auswahl aus eigenen Antworten
+   order:   {t, items:[...richtige Reihenfolge], why}
+   spot:    {t, parts:[html...], a:idx, why, look:'doc'|'search'}  Fehler / Anzeige antippen */
+const C = window.GAMECFG;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const show = id => ['sStart', 'sUnlock', 'sPlay', 'sEnd'].forEach(s => $(s).hidden = s !== id);
+$('tag').textContent = C.tag; $('gTitle').textContent = C.title; $('gLead').textContent = C.lead;
+$('roundList').innerHTML = C.rounds.map(r => `<div class="round"><b>${esc(r.label)}</b><span>${esc(r.desc)}</span></div>`).join('');
+let mode = 'practice', queue = [], idx = 0, score = 0, name = '', timerId = null, locked = false, results = [], orderPicked = [], jokersUsed = {};
+
+function build() {
+  queue = [];
+  C.rounds.forEach(r => {
+    let cards = r.fixedOrder ? r.cards.slice() : MK.shuffle(r.cards);
+    cards = cards.slice(0, r.n);
+    if (r.sortBy) cards.sort((a, b) => a[r.sortBy] - b[r.sortBy]);
+    cards.forEach(c => queue.push({ round: r, card: c }));
+  });
+  idx = 0; score = 0; results = []; jokersUsed = {};
+}
+function start(m) { mode = m; build(); $('scorePill').hidden = false; updateScore(); show('sPlay'); render(); }
+function updateScore() { $('scorePill').textContent = `${score} Punkte`; }
+function renderLadder() {
+  if (!C.quizshow) { $('ladder').hidden = true; return; }
+  $('ladder').hidden = false;
+  $('ladder').innerHTML = queue.map((_, i) => `<span class="${i < idx ? (results[i] ? 'done' : 'miss') : i === idx ? 'now' : ''}">${i + 1}</span>`).join('');
+}
+function render() {
+  locked = false; orderPicked = [];
+  const { round, card } = queue[idx];
+  $('prog').style.width = (idx / queue.length * 100) + '%';
+  renderLadder();
+  $('qLabel').textContent = `${round.label} · ${idx + 1} von ${queue.length}`;
+  $('qSub').textContent = card.sub || round.q || '';
+  $('fb').hidden = true; $('btnNext').hidden = true; $('btnCheck').hidden = true; $('tipbox').hidden = true;
+  $('legend').hidden = !round.legend;
+  if (round.legend) $('legend').innerHTML = round.legend.map(l => `<div><b>${esc(l[0])}</b> – ${esc(l[1])}</div>`).join('');
+  const body = $('qBody'); body.innerHTML = '';
+  const box = $('answers'); box.innerHTML = ''; box.style.removeProperty('--cols');
+  if (card.chat) {
+    const ch = document.createElement('div'); ch.className = 'chat';
+    ch.innerHTML = card.chat.map(m => `<div class="msg ${m[0] === 'Du' ? 'me' : ''}"><span class="who">${esc(m[0])}</span>${esc(m[1])}</div>`).join('');
+    body.appendChild(ch);
+  }
+  const t = document.createElement('div'); t.className = 'item'; t.textContent = card.t; body.appendChild(t);
+  const kind = round.kind;
+  if (kind === 'buttons') {
+    box.style.setProperty('--cols', round.options.length);
+    round.options.forEach(o => box.appendChild(mkBtn(`<span>${esc(o.label)}</span>${o.small ? `<small>${esc(o.small)}</small>` : ''}`, 'ans c-' + (o.color || 'blue'), () => answer(o.v === card.a, o.v))));
+  } else if (kind === 'mc') {
+    box.style.setProperty('--cols', card.o.length > 3 ? 2 : 1);
+    const order = MK.shuffle(card.o.map((_, i) => i));
+    order.forEach((oi, k) => {
+      const b = mkBtn(`<span class="key">${'ABCD'[k]}</span><span>${esc(card.o[oi])}</span>`, 'ans mc', () => answer(oi === card.a, oi));
+      b.dataset.oi = oi; box.appendChild(b);
+    });
+  } else if (kind === 'order') {
+    const slots = document.createElement('div'); slots.className = 'slots empty'; slots.id = 'slots'; body.appendChild(slots);
+    const tiles = document.createElement('div'); tiles.className = 'tiles'; tiles.id = 'tiles';
+    MK.shuffle(card.items.map((x, i) => i)).forEach(i => {
+      const b = document.createElement('button'); b.className = 'tile'; b.textContent = card.items[i];
+      b.onclick = () => { if (locked) return; orderPicked.push(i); b.disabled = true; drawSlots(); if (orderPicked.length === card.items.length) answer(orderPicked.every((v, k) => v === k), null); };
+      tiles.appendChild(b);
+    });
+    box.style.setProperty('--cols', 1); box.appendChild(tiles);
+    const undo = mkBtn('Letztes zurücknehmen', 'btn ghost', () => { if (locked || !orderPicked.length) return; const last = orderPicked.pop(); [...$('tiles').children].find(x => x.textContent === card.items[last]).disabled = false; drawSlots(); });
+    undo.style.cssText = 'background:#fff;flex:0 0 auto;min-height:48px;font-size:16px'; box.appendChild(undo);
+  } else if (kind === 'spot') {
+    const mock = document.createElement('div'); mock.className = 'mock';
+    card.parts.forEach((p, i) => {
+      const b = document.createElement('button'); b.className = 'part'; b.innerHTML = p; b.dataset.i = i;
+      b.onclick = () => answer(i === card.a, i, b); mock.appendChild(b);
+    });
+    body.appendChild(mock);
+  }
+  $('jokers').hidden = !(C.quizshow && kind === 'mc');
+  if (C.quizshow) { $('j5050').disabled = !!jokersUsed.f || mode === 'exam' && false; $('jTip').disabled = !!jokersUsed.t || !card.tip; }
+  if (mode === 'exam') startTimer(round.time || 20); else $('timerWrap').hidden = true;
+}
+function drawSlots() {
+  const { card } = queue[idx]; const s = $('slots');
+  s.classList.toggle('empty', !orderPicked.length);
+  s.innerHTML = orderPicked.map(i => `<span class="slot">${esc(card.items[i])}</span>`).join('');
+}
+function mkBtn(html, cls, fn) { const b = document.createElement('button'); b.className = cls; b.innerHTML = html; b.onclick = fn; return b; }
+function startTimer(sec) {
+  clearInterval(timerId); $('timerWrap').hidden = false;
+  const t0 = Date.now(); $('timer').style.width = '100%';
+  timerId = setInterval(() => {
+    const left = Math.max(0, 1 - (Date.now() - t0) / (sec * 1000));
+    $('timer').style.width = (left * 100) + '%';
+    if (left === 0) { clearInterval(timerId); answer(false, undefined); }
+  }, 100);
+}
+function answer(right, val, partBtn) {
+  if (locked) return; locked = true; clearInterval(timerId);
+  const { round, card } = queue[idx];
+  results[idx] = right; if (right) { score++; updateScore(); }
+  const box = $('answers');
+  [...box.querySelectorAll('.ans')].forEach(b => b.disabled = true);
+  [...document.querySelectorAll('.part, .tile')].forEach(b => b.disabled = true);
+  if (round.kind === 'buttons' || round.kind === 'mc') {
+    [...box.querySelectorAll('.ans')].forEach((b, k) => {
+      const v = round.kind === 'mc' ? +b.dataset.oi : round.options[k].v;
+      if (v === val) { b.disabled = false; b.classList.add('picked'); }
+      if (mode === 'practice' && v === card.a) { b.disabled = false; b.classList.add('right'); }
+    });
+  }
+  if (round.kind === 'spot') {
+    if (partBtn) partBtn.classList.add('picked');
+    if (mode === 'practice') document.querySelector(`.part[data-i="${card.a}"]`).classList.add('right');
+  }
+  if (C.quizshow) renderLadder();
+  if (mode === 'practice' || C.quizshow) {
+    const fb = $('fb'); fb.className = 'feedback ' + (right ? 'ok' : 'bad');
+    let sol = '';
+    if (!right && mode === 'practice') {
+      if (round.kind === 'buttons') sol = ' Richtig ist: ' + round.options.find(o => o.v === card.a).label + '.';
+      if (round.kind === 'mc') sol = ' Richtig ist: ' + card.o[card.a];
+      if (round.kind === 'order') sol = ' Richtig ist: ' + card.items.join(' → ');
+      if (round.kind === 'spot') sol = ' Der grün markierte Teil ist richtig.';
+    }
+    fb.innerHTML = mode === 'practice'
+      ? `<b>${right ? 'Richtig!' : 'Leider nicht.'}${esc(sol)}</b><span>${esc(card.why || '')}</span>`
+      : `<b>${right ? 'Richtig!' : 'Leider falsch.'}</b>`;
+    fb.hidden = false; $('btnNext').hidden = false; $('btnNext').focus();
+    if (mode === 'exam') setTimeout(() => { if (!$('btnNext').hidden) next(); }, 900);
+  } else setTimeout(next, 450);
+}
+function next() { $('btnNext').hidden = true; idx++; if (idx < queue.length) render(); else finish(); }
+function finish() {
+  $('prog').style.width = '100%';
+  const max = queue.length;
+  $('endScore').textContent = `${score}/${max}`;
+  const pct = score / max;
+  $('endStars').textContent = pct >= .9 ? '★★★' : pct >= .7 ? '★★☆' : pct >= .5 ? '★☆☆' : '☆☆☆';
+  $('endMsg').textContent = pct >= .9 ? C.praise : pct >= .7 ? 'Gut gemacht! Ein paar Karten kannst du noch üben.' : 'Üb noch ein bisschen. Lies dir die Erklärungen genau durch.';
+  if (mode === 'exam') {
+    $('endTitle').textContent = 'Prüfung beendet';
+    $('resCode').textContent = MK.resultCode(C.id, name, score, max);
+    $('examBox').hidden = false; $('endButtons').hidden = true;
+    MK.store.set('mk-exam-' + C.id + '-' + MK.today(), $('resCode').textContent);
+  } else { $('endTitle').textContent = 'Übung beendet'; $('examBox').hidden = true; $('endButtons').hidden = false; }
+  show('sEnd');
+}
+function needName() {
+  name = $('name').value.trim().replace(/·/g, '');
+  if (name.length < 2) { $('startErr').textContent = 'Schreib zuerst deinen Vornamen und deine Klasse.'; $('name').focus(); return false; }
+  $('startErr').textContent = ''; return true;
+}
+$('j5050').onclick = () => {
+  if (locked || jokersUsed.f) return; jokersUsed.f = true; $('j5050').disabled = true;
+  const { card } = queue[idx];
+  const wrong = MK.shuffle([...$('answers').querySelectorAll('.ans')].filter(b => +b.dataset.oi !== card.a));
+  wrong.slice(0, Math.max(0, wrong.length - 1)).forEach(b => { b.disabled = true; b.style.visibility = 'hidden'; });
+};
+$('jTip').onclick = () => {
+  if (locked || jokersUsed.t) return; jokersUsed.t = true; $('jTip').disabled = true;
+  $('tipbox').textContent = 'Tipp: ' + queue[idx].card.tip; $('tipbox').hidden = false;
+};
+$('btnPractice').onclick = () => { if (needName()) start('practice'); };
+$('btnExam').onclick = () => {
+  if (!needName()) return;
+  const done = MK.store.get('mk-exam-' + C.id + '-' + MK.today());
+  if (done) { $('resCode').textContent = done; $('endTitle').textContent = 'Prüfung schon gemacht'; $('endScore').textContent = done.split(' · ')[1]; $('endStars').textContent = ''; $('endMsg').textContent = 'Du hast die Prüfung heute schon gespielt. Hier ist dein Code.'; $('examBox').hidden = false; $('endButtons').hidden = true; show('sEnd'); return; }
+  $('unlock').value = ''; $('unlockErr').textContent = ''; show('sUnlock'); $('unlock').focus();
+};
+$('btnBack').onclick = () => show('sStart');
+$('btnUnlock').onclick = () => {
+  if ($('unlock').value.trim().toUpperCase() === MK.unlockCode(C.id, MK.today())) start('exam');
+  else $('unlockErr').textContent = 'Der Code stimmt nicht. Schau noch einmal an die Tafel.';
+};
+$('unlock').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnUnlock').click(); });
+$('btnNext').onclick = next;
+$('btnAgain').onclick = () => { $('scorePill').hidden = true; show('sStart'); };
+$('btnCopy').onclick = async () => {
+  const t = $('resCode').textContent;
+  try { await navigator.clipboard.writeText(t); $('copyMsg').textContent = 'Kopiert! Jetzt im Formular einfügen.'; }
+  catch (e) {
+    const r = document.createRange(); r.selectNodeContents($('resCode'));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    $('copyMsg').textContent = 'Der Code ist markiert. Tippe darauf und wähle „Kopieren“.';
+  }
+};
+</script>
+</body>
+</html>

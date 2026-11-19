@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="de">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daten-Ampel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Spielwelt in den Farben der Schule: Dunkelblau als Raum, weiße Karten, Ampel als Steuerung */
+  --navy: #123661;
+  --navy-2: #1d4a7e;
+  --blue: #009ee3;
+  --green: #5f9e10;
+  --green-bright: #94c11a;
+  --yellow: #f2b200;
+  --orange: #f39100;
+  --red: #d64541;
+  --card: #ffffff;
+  --ink: #123661;
+  --muted: #5d7190;
+  --font: 'Calibri', 'Carlito', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--navy); color: #fff; font-family: var(--font); font-size: 18px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; cursor: pointer; border: 0; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.app { min-height: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 16px 28px; gap: 18px; }
+.top { width: 100%; max-width: 760px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tag { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--green-bright); }
+.pill { background: var(--navy-2); border-radius: 999px; padding: 6px 14px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.screen { width: 100%; max-width: 760px; display: flex; flex-direction: column; gap: 18px; }
+h1 { font-size: 40px; line-height: 1.05; margin: 4px 0 0; text-wrap: balance; }
+h2 { font-size: 26px; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.lead { font-size: 20px; color: #d6e2f0; max-width: 60ch; }
+.panel { background: var(--card); color: var(--ink); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.rounds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.round { background: #eef2f7; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.round b { font-size: 17px; }
+.round span { font-size: 15px; color: var(--muted); }
+label { font-weight: 700; font-size: 16px; }
+input[type=text] { width: 100%; font: inherit; font-size: 20px; padding: 12px 14px; border-radius: 12px; border: 2px solid #bdc7d3; color: var(--ink); background: #fff; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn { border-radius: 14px; padding: 16px 22px; font-size: 20px; font-weight: 700; flex: 1 1 200px; min-height: 60px; }
+.btn.primary { background: var(--blue); color: #fff; }
+.btn.exam { background: var(--orange); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid #bdc7d3; }
+.btn.light { background: #fff; color: var(--navy); flex: 0 0 auto; }
+.screen > .btn, .screen > .row { flex: 0 0 auto; }
+.hint { font-size: 15px; color: var(--muted); }
+.err { color: var(--red); font-weight: 700; font-size: 16px; min-height: 1.2em; }
+.progress { height: 10px; background: var(--navy-2); border-radius: 999px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--green-bright); transition: width .3s; }
+.card { background: var(--card); color: var(--ink); border-radius: 22px; padding: 28px 24px; min-height: 210px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.card .q { font-size: 15px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.card .item { font-size: 32px; font-weight: 700; line-height: 1.15; text-wrap: balance; }
+.card .sub { font-size: 18px; color: var(--muted); }
+.answers { display: grid; gap: 12px; }
+.answers.three { grid-template-columns: repeat(3, 1fr); }
+.answers.two { grid-template-columns: repeat(2, 1fr); }
+.ans { border-radius: 18px; min-height: 96px; padding: 12px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 22px; font-weight: 700; transition: transform .1s; }
+.ans small { font-size: 14px; font-weight: 400; opacity: .95; }
+.ans:active { transform: scale(.97); }
+.ans.g { background: var(--green); } .ans.y { background: var(--yellow); color: #3a2a00; } .ans.r { background: var(--red); }
+.ans.yes { background: var(--green); } .ans.no { background: var(--red); }
+.ans .dot { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.9); }
+.ans[disabled] { opacity: .45; }
+.ans.picked { opacity: 1; outline: 4px solid #fff; }
+.feedback { border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; font-size: 18px; }
+.feedback.ok { background: #e5f4d0; color: #24440a; }
+.feedback.bad { background: #fbe1e0; color: #6e1714; }
+.feedback b { font-size: 20px; }
+.timer { height: 6px; background: var(--navy-2); border-radius: 999px; overflow: hidden; }
+.timer i { display: block; height: 100%; background: var(--orange); width: 100%; }
+.big { font-size: 64px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.stars { font-size: 40px; letter-spacing: 6px; color: var(--yellow); }
+.code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 20px; background: #eef2f7; color: var(--ink); border: 2px dashed var(--blue); border-radius: 12px; padding: 14px; word-break: break-word; user-select: all; -webkit-user-select: all; }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.legend div { border-radius: 12px; padding: 10px 12px; font-size: 15px; color: #fff; }
+.legend .lg { background: var(--green); } .legend .ly { background: var(--yellow); color: #3a2a00; } .legend .lr { background: var(--red); }
+[hidden] { display: none !important; }
+@media (max-width: 560px) {
+  h1 { font-size: 32px; }
+  .rounds, .legend { grid-template-columns: 1fr; }
+  .answers.three { grid-template-columns: 1fr; }
+  .ans { min-height: 70px; flex-direction: row; gap: 10px; }
+  .card .item { font-size: 26px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <span class="tag">Medienkunde 7e · Modul 2</span>
+    <span class="pill" id="scorePill" hidden>0 Punkte</span>
+  </div>
+
+  <!-- START -->
+  <section class="screen" id="sStart">
+    <h1>Daten-Ampel</h1>
+    <p class="lead">Was darfst du online teilen, was bleibt privat? Zeig, dass du deine Daten schützen kannst.</p>
+    <div class="panel">
+      <div class="rounds">
+        <div class="round"><b>Runde 1 · Ampel</b><span>Grün, Gelb oder Rot? 10 Karten</span></div>
+        <div class="round"><b>Runde 2 · App-Check</b><span>Braucht die App das wirklich? 5 Karten</span></div>
+        <div class="round"><b>Runde 3 · Konto-Profi</b><span>Richtig oder falsch? 5 Karten</span></div>
+      </div>
+      <div>
+        <label for="name">Dein Vorname und deine Klasse</label>
+        <input type="text" id="name" placeholder="z. B. Lena 7G2" autocomplete="off" maxlength="30">
+      </div>
+      <p class="err" id="startErr"></p>
+      <div class="row">
+        <button class="btn primary" id="btnPractice">Üben</button>
+        <button class="btn exam" id="btnExam">Prüfung starten</button>
+      </div>
+      <p class="hint">Üben: so oft du willst, mit Erklärungen. Prüfung: nur mit dem Code deiner Lehrkraft, nur einmal, zählt für die Note.</p>
+    </div>
+  </section>
+
+  <!-- CODE -->
+  <section class="screen" id="sUnlock" hidden>
+    <h2>Prüfung freischalten</h2>
+    <div class="panel">
+      <label for="unlock">Code von der Tafel</label>
+      <input type="text" id="unlock" placeholder="4 Zeichen" autocomplete="off" maxlength="4" style="text-transform:uppercase;letter-spacing:.3em">
+      <p class="err" id="unlockErr"></p>
+      <div class="row">
+        <button class="btn ghost" id="btnBack">Zurück</button>
+        <button class="btn exam" id="btnUnlock">Los geht’s</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="sPlay" hidden>
+    <div class="progress"><i id="prog"></i></div>
+    <div class="legend" id="legend">
+      <div class="lg"><b>Grün</b> – darf ich teilen</div>
+      <div class="ly"><b>Gelb</b> – nur vorsichtig oder mit Erlaubnis</div>
+      <div class="lr"><b>Rot</b> – bleibt privat</div>
+    </div>
+    <div class="card">
+      <div class="q" id="qLabel">Runde 1 · Ampel</div>
+      <div class="item" id="qItem"></div>
+      <div class="sub" id="qSub"></div>
+    </div>
+    <div class="timer" id="timerWrap" hidden><i id="timer"></i></div>
+    <div class="answers three" id="answers"></div>
+    <div class="feedback" id="fb" hidden></div>
+    <button class="btn light" id="btnNext" hidden>Weiter</button>
+  </section>
+
+  <!-- END -->
+  <section class="screen" id="sEnd" hidden>
+    <h2 id="endTitle">Geschafft!</h2>
+    <div class="panel" style="align-items:center;text-align:center">
+      <div class="big" id="endScore">0/20</div>
+      <div class="stars" id="endStars"></div>
+      <p id="endMsg"></p>
+    </div>
+    <div class="panel" id="examBox" hidden>
+      <h2>Ergebnis abgeben</h2>
+      <p>Das ist dein Ergebnis-Code:</p>
+      <div class="code" id="resCode"></div>
+      <div class="row"><button class="btn primary" id="btnCopy">Code kopieren</button></div>
+      <p class="hint" id="copyMsg"></p>
+      <ol class="steps">
+        <li>Tippe auf <b>Code kopieren</b>.</li>
+        <li>Öffne in Teams das Formular <b>Medienkunde – Ergebnisse</b>.</li>
+        <li>Füge den Code ein und tippe auf <b>Absenden</b>.</li>
+      </ol>
+      <p class="hint">Ändere den Code nicht. Sonst ist er ungültig.</p>
+    </div>
+    <div class="row" id="endButtons">
+      <button class="btn primary" id="btnAgain">Nochmal üben</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* Medienkunde 7e – gemeinsamer Spielkern (Codes, Mischen, Speicher) */
+const MK = (() => {
+  const SALT = 'MK7-Medienkunde-2026';
+  const ALPH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function fnv(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h >>> 0;
+  }
+  function enc(n, len) {
+    let s = '';
+    for (let i = 0; i < len; i++) { s += ALPH[n % 32]; n = Math.floor(n / 32); }
+    return s;
+  }
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dateDE = iso => iso.split('-').reverse().join('.');
+  // Freischaltcode: pro Spiel und Tag
+  const unlockCode = (game, iso) => enc(fnv(SALT + '|open|' + game + '|' + iso), 4);
+  // Prüfcode für das Ergebnis
+  const check = (game, name, pts, max, iso) => enc(fnv(SALT + '|res|' + game + '|' + name.trim().toLowerCase() + '|' + pts + '|' + max + '|' + iso), 5);
+  const resultCode = (game, name, pts, max) => {
+    const iso = today();
+    return `${game} · ${pts}/${max} · ${dateDE(iso)} · ${name.trim()} · ${check(game, name, pts, max, iso)}`;
+  };
+  const parse = line => {
+    const m = line.match(/(M[1-7]|FIN)\s*·\s*(\d+)\/(\d+)\s*·\s*(\d{2})\.(\d{2})\.(\d{4})\s*·\s*(.+?)\s*·\s*([A-Z2-9]{5})/);
+    if (!m) return null;
+    const iso = `${m[6]}-${m[5]}-${m[4]}`;
+    const ok = check(m[1], m[7], +m[2], +m[3], iso) === m[8];
+    return { game: m[1], pts: +m[2], max: +m[3], date: dateDE(iso), name: m[7], ok };
+  };
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* egal */ } },
+  };
+  return { unlockCode, resultCode, parse, shuffle, store, today, dateDE };
+})();
+
+</script>
+<script>
+const GAME = 'M2';
+const ROUNDS = [
+  { key: 'ampel', label: 'Runde 1 · Ampel', n: 10, kind: 'ampel', q: 'Darfst du das online teilen?' },
+  { key: 'app', label: 'Runde 2 · App-Check', n: 5, kind: 'yesno', q: 'Soll die App das dürfen?' },
+  { key: 'konto', label: 'Runde 3 · Konto-Profi', n: 5, kind: 'truefalse', q: 'Richtig oder falsch?' },
+];
+const BANK = {
+  ampel: [
+    ['Dein Lieblingstier', 'g', 'Ein Lieblingstier verrät nicht, wer du bist oder wo du wohnst.'],
+    ['Dein Hobby', 'g', 'Hobbys kannst du ruhig teilen. Sie sagen nichts darüber, wo man dich findet.'],
+    ['Deine Lieblingsband', 'g', 'Das ist harmlos und macht Spaß zu teilen.'],
+    ['Dein Lieblingsessen', 'g', 'Lieblingsessen sind keine privaten Daten.'],
+    ['Dein Vorname', 'g', 'Nur der Vorname allein ist okay. Mit Nachname und Wohnort zusammen wird es gefährlich.'],
+    ['Ein Selfie von dir', 'y', 'Überleg vorher: Wer sieht das Bild? Ein Foto bleibt oft für immer im Netz.'],
+    ['Ein Foto mit deinen Freunden', 'y', 'Nur wenn alle auf dem Foto einverstanden sind.'],
+    ['Der Name deiner Schule', 'y', 'Damit weiß man, wo du jeden Tag bist. Nur in privaten Gruppen teilen.'],
+    ['Dein Alter', 'y', 'Nicht schlimm, aber Fremden musst du es nicht sagen.'],
+    ['Ein Video aus deinem Zimmer', 'y', 'Achte darauf, was im Hintergrund zu sehen ist: Adresse, Fenster, Namen.'],
+    ['Deine Handynummer', 'r', 'Mit deiner Nummer kann dich jeder anschreiben oder in Gruppen einladen.'],
+    ['Deine Adresse', 'r', 'Fremde wüssten, wo du wohnst. Die Adresse bleibt immer privat.'],
+    ['Dein Passwort', 'r', 'Dein Passwort gehört nur dir, auch nicht der besten Freundin.'],
+    ['Der Code von deinem iPad', 'r', 'Mit dem Code kommt jeder an deine Dateien und Konten.'],
+    ['Wann deine Familie in Urlaub fährt', 'r', 'Dann wissen Fremde, dass euer Haus leer ist.'],
+    ['Wo du gerade bist (Live-Standort)', 'r', 'Fremde könnten dich finden. Standort nur mit der Familie teilen.'],
+    ['Dein voller Name mit Geburtsdatum', 'r', 'Damit kann sich jemand als du ausgeben.'],
+  ],
+  app: [
+    ['Eine Taschenlampen-App will deine Kontakte sehen.', false, 'Eine Taschenlampe braucht nur das Licht. Kontakte gehen sie nichts an.'],
+    ['Die Kamera-App will die Kamera benutzen.', true, 'Logisch: Ohne Kamera kann sie keine Fotos machen.'],
+    ['Teams will das Mikrofon für einen Videoanruf.', true, 'Für einen Anruf braucht Teams das Mikrofon.'],
+    ['Ein Taschenrechner will das Mikrofon.', false, 'Zum Rechnen braucht man kein Mikrofon.'],
+    ['Ein Spiel will alle deine Fotos sehen.', false, 'Ein Spiel braucht deine Fotos nicht. Sag Nein.'],
+    ['Eine Karten-App will deinen Standort, während du sie benutzt.', true, 'Für den Weg braucht sie deinen Standort, aber nur beim Benutzen.'],
+    ['Eine Wetter-App will deinen Standort immer, auch wenn sie zu ist.', false, '„Beim Verwenden“ reicht. „Immer“ verrät, wo du den ganzen Tag bist.'],
+    ['Eine Foto-App zum Bearbeiten will deine Fotos.', true, 'Zum Bearbeiten braucht sie deine Fotos. Gib ihr nur ausgewählte.'],
+  ],
+  konto: [
+    ['Meine beste Freundin darf mein Passwort kennen.', false, 'Dein Passwort gehört nur dir. Auch Freunde können sich mal streiten.'],
+    ['Am Klassen-PC melde ich mich nach der Stunde ab.', true, 'Sonst kann der Nächste in deinem Namen schreiben.'],
+    ['Ich schreibe mein Passwort auf die iPad-Hülle.', false, 'Dann kann es jeder lesen. Merk es dir lieber mit einem Satz.'],
+    ['Kennt jemand mein Passwort, ändere ich es und sage es der Lehrkraft.', true, 'Genau so. Je schneller, desto besser.'],
+    ['Mein iPad-Code ist 123456.', false, 'Den errät jeder in Sekunden.'],
+    ['Wenn ich meinen Platz verlasse, sperre ich mein iPad.', true, 'So kann niemand heimlich etwas mit deinem iPad machen.'],
+    ['Ich benutze für alles dasselbe Passwort.', false, 'Wird es geknackt, sind alle deine Konten offen.'],
+    ['Ich gebe mein Passwort nie in einer Nachricht weiter.', true, 'Richtig. Auch nicht, wenn jemand sagt, er sei von der Schule.'],
+  ],
+};
+
+const $ = id => document.getElementById(id);
+const show = id => ['sStart', 'sUnlock', 'sPlay', 'sEnd'].forEach(s => $(s).hidden = s !== id);
+let mode = 'practice', queue = [], idx = 0, score = 0, name = '', timerId = null, locked = false;
+const TIME = 15; // Sekunden pro Karte in der Prüfung
+
+function build() {
+  queue = [];
+  ROUNDS.forEach(r => MK.shuffle(BANK[r.key]).slice(0, r.n).forEach(c => queue.push({ round: r, card: c })));
+  idx = 0; score = 0;
+}
+function start(m) {
+  mode = m; build();
+  $('scorePill').hidden = false; updateScore();
+  show('sPlay'); render();
+}
+function updateScore() { $('scorePill').textContent = `${score} Punkte`; }
+function render() {
+  locked = false;
+  const { round, card } = queue[idx];
+  $('prog').style.width = (idx / queue.length * 100) + '%';
+  $('qLabel').textContent = `${round.label} · Karte ${idx + 1} von ${queue.length}`;
+  $('qItem').textContent = card[0];
+  $('qSub').textContent = round.q;
+  $('legend').hidden = round.kind !== 'ampel';
+  $('fb').hidden = true; $('btnNext').hidden = true;
+  const box = $('answers'); box.innerHTML = '';
+  let opts;
+  if (round.kind === 'ampel') { box.className = 'answers three'; opts = [['g', 'Grün', 'teilen'], ['y', 'Gelb', 'vorsichtig'], ['r', 'Rot', 'privat']]; }
+  else if (round.kind === 'yesno') { box.className = 'answers two'; opts = [[true, 'Ja', 'erlauben'], [false, 'Nein', 'ablehnen']]; }
+  else { box.className = 'answers two'; opts = [[true, 'Richtig', ''], [false, 'Falsch', '']]; }
+  opts.forEach(([val, t, s]) => {
+    const b = document.createElement('button');
+    b.className = 'ans ' + (round.kind === 'ampel' ? val : (val ? 'yes' : 'no'));
+    b.innerHTML = (round.kind === 'ampel' ? '<span class="dot"></span>' : '') + `<span>${t}</span>` + (s ? `<small>${s}</small>` : '');
+    b.onclick = () => answer(val, b);
+    box.appendChild(b);
+  });
+  if (mode === 'exam') startTimer(); else $('timerWrap').hidden = true;
+}
+function startTimer() {
+  clearInterval(timerId);
+  $('timerWrap').hidden = false;
+  const t0 = Date.now();
+  $('timer').style.width = '100%';
+  timerId = setInterval(() => {
+    const left = Math.max(0, 1 - (Date.now() - t0) / (TIME * 1000));
+    $('timer').style.width = (left * 100) + '%';
+    if (left === 0) { clearInterval(timerId); answer(null, null); }
+  }, 100);
+}
+function answer(val, btn) {
+  if (locked) return; locked = true; clearInterval(timerId);
+  const { card } = queue[idx];
+  const right = val === card[1];
+  if (right) { score++; updateScore(); }
+  [...$('answers').children].forEach(b => b.disabled = true);
+  if (btn) { btn.disabled = false; btn.classList.add('picked'); }
+  if (mode === 'practice') {
+    const fb = $('fb');
+    fb.className = 'feedback ' + (right ? 'ok' : 'bad');
+    const names = { g: 'Grün', y: 'Gelb', r: 'Rot', true: queue[idx].round.kind === 'yesno' ? 'Ja' : 'Richtig', false: queue[idx].round.kind === 'yesno' ? 'Nein' : 'Falsch' };
+    fb.innerHTML = `<b>${right ? 'Richtig!' : 'Leider nicht. Richtig ist: ' + names[card[1]]}</b><span>${card[2]}</span>`;
+    fb.hidden = false; $('btnNext').hidden = false; $('btnNext').focus();
+  } else {
+    setTimeout(next, 450);
+  }
+}
+function next() {
+  idx++;
+  if (idx < queue.length) render(); else finish();
+}
+function finish() {
+  $('prog').style.width = '100%';
+  const max = queue.length;
+  $('endScore').textContent = `${score}/${max}`;
+  const pct = score / max;
+  $('endStars').textContent = pct >= .9 ? '★★★' : pct >= .7 ? '★★☆' : pct >= .5 ? '★☆☆' : '☆☆☆';
+  $('endMsg').textContent = pct >= .9 ? 'Super! Du bist ein echter Daten-Profi.' : pct >= .7 ? 'Gut gemacht! Ein paar Karten kannst du noch üben.' : 'Üb noch ein bisschen. Lies dir die Erklärungen genau durch.';
+  if (mode === 'exam') {
+    $('endTitle').textContent = 'Prüfung beendet';
+    $('resCode').textContent = MK.resultCode(GAME, name, score, max);
+    $('examBox').hidden = false; $('endButtons').hidden = true;
+    MK.store.set('mk-exam-' + GAME + '-' + MK.today(), $('resCode').textContent);
+  } else {
+    $('endTitle').textContent = 'Übung beendet';
+    $('examBox').hidden = true; $('endButtons').hidden = false;
+  }
+  show('sEnd');
+}
+function needName() {
+  name = $('name').value.trim().replace(/·/g, '');
+  if (name.length < 2) { $('startErr').textContent = 'Schreib zuerst deinen Vornamen und deine Klasse.'; $('name').focus(); return false; }
+  $('startErr').textContent = ''; return true;
+}
+$('btnPractice').onclick = () => { if (needName()) start('practice'); };
+$('btnExam').onclick = () => {
+  if (!needName()) return;
+  const done = MK.store.get('mk-exam-' + GAME + '-' + MK.today());
+  if (done) { $('resCode').textContent = done; $('endTitle').textContent = 'Prüfung schon gemacht'; $('endScore').textContent = done.split(' · ')[1]; $('endStars').textContent = ''; $('endMsg').textContent = 'Du hast die Prüfung heute schon gespielt. Hier ist dein Code.'; $('examBox').hidden = false; $('endButtons').hidden = true; show('sEnd'); return; }
+  $('unlock').value = ''; $('unlockErr').textContent = ''; show('sUnlock'); $('unlock').focus();
+};
+$('btnBack').onclick = () => show('sStart');
+$('btnUnlock').onclick = () => {
+  if ($('unlock').value.trim().toUpperCase() === MK.unlockCode(GAME, MK.today())) start('exam');
+  else $('unlockErr').textContent = 'Der Code stimmt nicht. Schau noch einmal an die Tafel.';
+};
+$('unlock').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnUnlock').click(); });
+$('btnNext').onclick = next;
+$('btnAgain').onclick = () => { $('scorePill').hidden = true; show('sStart'); };
+$('btnCopy').onclick = async () => {
+  const t = $('resCode').textContent;
+  try { await navigator.clipboard.writeText(t); $('copyMsg').textContent = 'Kopiert! Jetzt im Formular einfügen.'; }
+  catch (e) {
+    const r = document.createRange(); r.selectNodeContents($('resCode'));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    $('copyMsg').textContent = 'Der Code ist markiert. Tippe darauf und wähle „Kopieren“.';
+  }
+};
+</script>
+</body>
+</html>
